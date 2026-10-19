@@ -78,8 +78,13 @@ Una vez completada la instalación, acceda a través de su navegador web:
 
 ---
 
-## 🔧 Cargar dataset de prueba
+## 🔧 Gestión del Dataset y Anotaciones (Scripts Python)
 
+Para trabajar con el dataset de evaluación (`telco_multitask_evaluation`), se proporcionan scripts en Python para la preparación, carga, verificación del progreso de anotación y exportación de datos.
+
+### 1. Preparación del Entorno Virtual
+
+```bash
 # Crear el venv local
 python3 -m venv .venv
 
@@ -89,9 +94,37 @@ source .venv/bin/activate
 # Instalar dependencias
 pip install --upgrade pip
 pip install argilla
+```
 
-# Ejecutar la carga
+### 2. Scripts Disponibles
+
+#### `upload_to_argilla.py` (Carga inicial)
+Carga el conjunto de datos desde `train-dataset1/train.jsonl` en Argilla bajo el nombre `telco_multitask_evaluation`. Configura dinámicamente las preguntas del dataset (`choice`, `noul`, `score`), añade metadatos y asigna sugerencias iniciales a cada registro.
+```bash
 python upload_to_argilla.py
+```
+
+#### `comprobar.py` (Verificación de estado de anotación)
+Comprueba el estado del dataset `telco_multitask_evaluation` en la base de datos de Argilla. Realiza las siguientes tareas:
+- **Conteo de registros anotados:** Contabiliza los registros que ya tienen respuestas guardadas (`responses`).
+- **Conteo de registros pendientes:** Identifica los registros que aún no han sido respondidos.
+- **Identificación de anotadores:** Lista los identificadores únicos (`user_id`) de los usuarios que han enviado respuestas.
+- Imprime un resumen del progreso por consola para seguimiento rápido sin necesidad de acceder a la interfaz web.
+```bash
+python comprobar.py
+```
+
+#### `exportarr-anotados.py` (Exportación de datos anotados)
+Extrae las respuestas guardadas del dataset `telco_multitask_evaluation` y genera un dataset limpio y estructurado para su posterior uso o entrenamiento:
+- **Mapeo de respuestas por tarea (*primitive*):**
+  - `choice`: Extrae la selección del departamento (`department`).
+  - `noul`: Extrae y convierte a entero la confirmación binaria (`binary_confirmation`).
+  - `score`: Extrae y convierte a entero el nivel de frustración (`frustration_score`).
+- **Mecanismo de respaldo (*fallback*):** Si un registro no tiene una respuesta guardada por un usuario, recupera el valor de las sugerencias (`suggestions`).
+- **Exportación a JSONL:** Guarda los registros procesados en `train-dataset1/train_annotated.jsonl` con los campos `id`, `primitive`, `state`, `question` (tipo e instrucciones), `target` y `status`.
+```bash
+python exportarr-anotados.py
+```
 
 ---
 
