@@ -78,6 +78,23 @@ Una vez completada la instalación, acceda a través de su navegador web:
 
 ---
 
+## 🔧 Cargar dataset de prueba
+
+# Crear el venv local
+python3 -m venv .venv
+
+# Activar el entorno
+source .venv/bin/activate
+
+# Instalar dependencias
+pip install --upgrade pip
+pip install argilla
+
+# Ejecutar la carga
+python upload_to_argilla.py
+
+---
+
 ## ⚙️ Opciones de Personalización
 
 Puede personalizar los parámetros pasando argumentos al instalador o modificando el archivo `.env`:
