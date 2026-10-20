@@ -57,6 +57,11 @@ make install
 
 ### En Microsoft Windows (PowerShell Nativo)
 
+El instalador desatendido [install.ps1](file:///Users/alejandro/Documents/LEARN/UGR/UGR-NLP/Argilla-docker/install.ps1) está optimizado para entornos nativos de Microsoft Windows (PowerShell 5.1 y PowerShell 7+):
+- **Parámetros no sensibles a mayúsculas/minúsculas:** Compatible con la convención de PowerShell (`-Port`, `-Password` / `-pwd` / `-pass`, `-ApiKey`, `-Workspace`, `-Clean`, etc.).
+- **Gestión automática de Docker Desktop:** Comprueba el estado del demonio Docker y de Docker Compose sin requerir herramientas Unix externas.
+- **Configuración diferencial:** Aplica el perfil de JVM adecuado para Windows/x86_64 evitando parámetros incompatibles de procesadores ARM.
+
 Abra PowerShell en la carpeta del proyecto y ejecute:
 
 ```powershell
@@ -64,7 +69,7 @@ Abra PowerShell en la carpeta del proyecto y ejecute:
 ```
 
 > [!TIP]
-> Si la política de ejecución de PowerShell bloquea los scripts locales, ejecute:  
+> Si la directiva de ejecución de PowerShell restringe la ejecución de scripts locales, ejecute:  
 > `powershell -ExecutionPolicy Bypass -File .\install.ps1`
 
 También puede utilizar **Git Bash** o **WSL2** en Windows ejecutando directamente `./install.sh`.
@@ -112,53 +117,76 @@ Una vez completada la instalación, acceda a través de su navegador web:
 
 ---
 
-## 🔧 Gestión del Dataset y Anotaciones (Scripts Python)
+## 🔧 Gestión de Datasets y Anotaciones
 
-Para trabajar con el dataset de evaluación (`telco_multitask_evaluation`), se proporcionan scripts en Python para la preparación, carga, verificación del progreso de anotación y exportación de datos.
+El proyecto ofrece herramientas interactivas mediante **Jupyter Notebooks** y scripts automatizados en **Python** para crear datasets, importar datos desde Hugging Face, cargar archivos locales `.jsonl`, monitorear el progreso de anotación y exportar los resultados curados.
 
 ### 1. Preparación del Entorno Virtual
+
+Para ejecutar los cuadernos interactivos y los scripts, active el entorno virtual e instale las dependencias recomendadas:
 
 ```bash
 # Crear el venv local
 python3 -m venv .venv
 
-# Activar el entorno
+# Activar el entorno en macOS / Linux:
 source .venv/bin/activate
 
-# Instalar dependencias
+# Activar el entorno en Windows (PowerShell):
+.\.venv\Scripts\Activate.ps1
+
+# Instalar dependencias necesarias (Argilla, Datasets de Hugging Face y Jupyter)
 pip install --upgrade pip
-pip install argilla
+pip install argilla datasets jupyter
 ```
 
-### 2. Scripts Disponibles
+---
 
-#### `upload_to_argilla.py` (Carga inicial)
-Carga el conjunto de datos desde `train-dataset1/train.jsonl` en Argilla bajo el nombre `telco_multitask_evaluation`. Configura dinámicamente las preguntas del dataset (`choice`, `noul`, `score`), añade metadatos y asigna sugerencias iniciales a cada registro.
-```bash
-python upload_to_argilla.py
-```
+### 2. Cuadernos Interactivos (Jupyter Notebooks)
 
-#### `comprobar.py` (Verificación de estado de anotación)
-Comprueba el estado del dataset `telco_multitask_evaluation` en la base de datos de Argilla. Realiza las siguientes tareas:
-- **Conteo de registros anotados:** Contabiliza los registros que ya tienen respuestas guardadas (`responses`).
-- **Conteo de registros pendientes:** Identifica los registros que aún no han sido respondidos.
-- **Identificación de anotadores:** Lista los identificadores únicos (`user_id`) de los usuarios que han enviado respuestas.
-- Imprime un resumen del progreso por consola para seguimiento rápido sin necesidad de acceder a la interfaz web.
-```bash
-python comprobar.py
-```
+#### 📓 [cargar-datos-hf.ipynb](file:///Users/alejandro/Documents/LEARN/UGR/UGR-NLP/Argilla-docker/cargar-datos-hf.ipynb): Carga de Datasets Públicos de Hugging Face
+Permite volcar registros desde cualquier dataset público alojado en [Hugging Face](https://huggingface.co/datasets) (por ejemplo, `FineEnvs/openai-math`) hacia su contenedor correspondiente en Argilla.
 
-#### `exportarr-anotados.py` (Exportación de datos anotados)
-Extrae las respuestas guardadas del dataset `telco_multitask_evaluation` y genera un dataset limpio y estructurado para su posterior uso o entrenamiento:
-- **Mapeo de respuestas por tarea (*primitive*):**
-  - `choice`: Extrae la selección del departamento (`department`).
-  - `noul`: Extrae y convierte a entero la confirmación binaria (`binary_confirmation`).
-  - `score`: Extrae y convierte a entero el nivel de frustración (`frustration_score`).
-- **Mecanismo de respaldo (*fallback*):** Si un registro no tiene una respuesta guardada por un usuario, recupera el valor de las sugerencias (`suggestions`).
-- **Exportación a JSONL:** Guarda los registros procesados en `train-dataset1/train_annotated.jsonl` con los campos `id`, `primitive`, `state`, `question` (tipo e instrucciones), `target` y `status`.
-```bash
-python exportarr-anotados.py
-```
+**Flujo de trabajo requerido:**
+1. **Creación previa del contenedor en la UI:** Abra la interfaz web de Argilla (`http://localhost:6900`), inicie sesión y seleccione la opción **"Import from Hugging Face"**. Indique el identificador del repositorio de Hugging Face para que Argilla configure automáticamente el esquema de preguntas y campos del dataset.
+2. **Carga y sincronización vía Notebook:** Abra `cargar-datos-hf.ipynb`. El cuaderno descarga el split deseado mediante la librería `datasets` (`load_dataset(...)`), conecta con la API de Argilla y envía los registros masivamente al dataset previamente creado usando `dataset.records.log(ds, mapping={})`.
+
+#### 📓 [cargar-datos-jsonl.ipynb](file:///Users/alejandro/Documents/LEARN/UGR/UGR-NLP/Argilla-docker/cargar-datos-jsonl.ipynb): Creación, Carga y Exportación desde JSONL
+Cuaderno interactivo todo-en-uno estructurado en celdas preparadas para gestionar el ciclo completo de anotación local:
+1. **Creación del Dataset y Carga de Registros:**
+   - Lee el archivo `train-dataset1/train.jsonl`.
+   - Descubre dinámicamente el catálogo de etiquetas para tareas de tipo `choice`.
+   - Configura el dataset en Argilla (`telco_multitask_evaluation`) definiendo directrices, campos (`text`, `task_instructions`, `criteria_guide`) y preguntas de anotación (`review_status`, `department`, `binary_confirmation`, `frustration_score`).
+   - Envía los registros en lotes (*batches* de 100) incluyendo sugerencias pre-cargadas basadas en `target` para agilizar la anotación.
+2. **Exportación de Datos Curados a JSONL Local:**
+   - Consulta los registros del dataset incluyendo las respuestas guardadas por los anotadores (`with_responses=True`).
+   - Exporta los datos consolidados directamente a un archivo local `.jsonl` (`train-dataset1/annotated.jsonl`), listo para tareas de entrenamiento o evaluación de modelos.
+
+---
+
+### 3. Scripts Python Disponibles
+
+Para ejecución directa desde terminal o flujos de trabajo automatizados:
+
+- **`upload_to_argilla.py` / `cargar-datos-jsonl.py` (Carga inicial):** Script de consola que crea el dataset y sube los registros de `train-dataset1/train.jsonl` con preguntas y sugerencias predefinidas.
+  ```bash
+  python upload_to_argilla.py
+  ```
+- **`cargar-datos-hf-terminal-hf.py` (Carga desde Hugging Face):** Script en línea de comandos para sincronizar registros desde Hugging Face hacia un dataset importado previamente en Argilla.
+  ```bash
+  python cargar-datos-hf-terminal-hf.py
+  ```
+- **`comprobar.py` (Verificación de estado de anotación):** Consulta la base de datos de Argilla e imprime un resumen en consola sin necesidad de abrir el navegador:
+  - Conteo de registros anotados (`responses`) vs. pendientes.
+  - Identificación de los anotadores activos (`user_id`).
+  ```bash
+  python comprobar.py
+  ```
+- **`exportarr-anotados.py` (Exportación estructurada):** Extrae las respuestas guardadas del dataset, procesa cada tipo de tarea (`choice`, `noul`, `score`), aplica sugerencias como respaldo (*fallback*) y genera el archivo `train-dataset1/train_annotated.jsonl`.
+  ```bash
+  python exportarr-anotados.py
+  ```
+
 
 ---
 
@@ -180,7 +208,7 @@ Puede personalizar los parámetros pasando argumentos al instalador o modificand
 | :--- | :--- | :--- | :--- |
 | `-p`, `--port` | `-Port` | Puerto expuesto en el host | `6900` |
 | `-u`, `--user` | `-User` | Nombre del usuario administrador | `argilla` |
-| `-P`, `--password` | `-Password` | Contraseña del usuario administrador | `12345678` |
+| `-P`, `--password` | `-Password` (alias: `-pwd`, `-pass`) | Contraseña del usuario administrador | `12345678` |
 | `-k`, `--api-key` | `-ApiKey` | API Key para autenticación en clientes | `argilla.apikey` |
 | `-w`, `--workspace` | `-Workspace` | Espacio de trabajo inicial | `default` |
 | `-t`, `--timeout` | `-Timeout` | Tiempo máximo de espera en segundos para arranque | `180` |

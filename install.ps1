@@ -9,7 +9,7 @@ param (
     [Alias("u")]
     [string]$User = "",
 
-    [Alias("P")]
+    [Alias("pwd", "pass")]
     [string]$Password = "",
 
     [Alias("k")]
