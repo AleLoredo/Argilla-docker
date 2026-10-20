@@ -342,8 +342,8 @@ Write-Host "  API Key:               $CurrentApiKey" -ForegroundColor Yellow
 Write-Host "  Workspace Inicial:     $CurrentWorkspace" -ForegroundColor Yellow
 Write-Host ""
 Write-Host "  Comandos de gestión rápida en PowerShell:"
-Write-Host "    - Ver estado y salud:     .\status.ps1" -ForegroundColor Cyan
-Write-Host "    - Detener el servicio:    .\stop.ps1" -ForegroundColor Cyan
-Write-Host "    - Iniciar el servicio:    .\start.ps1" -ForegroundColor Cyan
+Write-Host "    - Ver estado y salud:     .\scripts\status.ps1" -ForegroundColor Cyan
+Write-Host "    - Detener el servicio:    .\scripts\stop.ps1" -ForegroundColor Cyan
+Write-Host "    - Iniciar el servicio:    .\scripts\start.ps1" -ForegroundColor Cyan
 Write-Host "    - Limpieza total:         .\install.ps1 -CleanOnly -Yes" -ForegroundColor Cyan
 Write-Host "================================================================================" -ForegroundColor Green

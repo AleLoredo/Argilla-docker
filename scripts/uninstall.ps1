@@ -14,11 +14,12 @@ param (
 )
 
 $ErrorActionPreference = "Stop"
-Set-Location -Path $PSScriptRoot
+$RootDir = Split-Path -Parent $PSScriptRoot
+Set-Location -Path $RootDir
 
 if ($Help) {
     Write-Host @"
-Uso: .\uninstall.ps1 [OPCIONES]
+Uso: .\scripts\uninstall.ps1 [OPCIONES]
 
 Detiene y elimina los contenedores y redes del despliegue de Argilla en Windows.
 
@@ -62,5 +63,5 @@ if ($Volumes) {
         docker-compose down --remove-orphans
     }
     Write-Host "[OK] Despliegue detenido. Los datos permanecen guardados en volúmenes Docker." -ForegroundColor Green
-    Write-Host "[INFO] Para eliminar también los datos, ejecute: .\uninstall.ps1 -Volumes" -ForegroundColor Cyan
+    Write-Host "[INFO] Para eliminar también los datos, ejecute: .\scripts\uninstall.ps1 -Volumes" -ForegroundColor Cyan
 }

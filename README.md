@@ -152,11 +152,11 @@ pip install jupyter datasets
 
 ---
 
-### 2. Cuadernos Interactivos Disponibles
+### 2. Cuadernos Interactivos Disponibles (Carpeta `notebooks/`)
 
-#### 📓 [cargar-datos-jsonl.ipynb]: Creación, Carga y Exportación desde JSONL
+#### 📓 [notebooks/cargar-datos-jsonl.ipynb](notebooks/cargar-datos-jsonl.ipynb): Creación, Carga y Exportación desde JSONL
 Cuaderno integral preparado para gestionar el ciclo de anotación local a partir del dataset multirareo (`train.jsonl`):
-- **Celda 1:** Instalación de dependencias locales (`%pip install -r requirements.txt`).
+- **Celda 1:** Instalación de dependencias (`%pip install -r ../requirements.txt`).
 - **Celda 2 (Creación del Dataset y Carga):**
   - Lee y valida el archivo `train-dataset1/train.jsonl`.
   - Descubre dinámicamente las etiquetas correspondientes a las tareas de tipo `choice`.
@@ -166,14 +166,14 @@ Cuaderno integral preparado para gestionar el ciclo de anotación local a partir
   - Extrae todos los registros que cuentan con respuestas enviadas por los anotadores (`with_responses=True`).
   - Genera y guarda el dataset resultante en formato estructurado dentro del archivo local `train-dataset1/annotated.jsonl`.
 
-#### 📓 [cargar-datos-hf.ipynb]: Carga de Datasets Públicos de Hugging Face
+#### 📓 [notebooks/cargar-datos-hf.ipynb](notebooks/cargar-datos-hf.ipynb): Carga de Datasets Públicos de Hugging Face
 Permite volcar registros desde cualquier dataset público alojado en [Hugging Face](https://huggingface.co/datasets) (por ejemplo, `FineEnvs/openai-math` u otros conjuntos de datos) hacia su contenedor correspondiente en Argilla.
 
 **Flujo de trabajo:**
 1. **Creación previa del contenedor en la UI:** Abra la interfaz web de Argilla (`http://localhost:6900`), inicie sesión y seleccione la opción **"Import from Hugging Face"**. Indique el identificador del repositorio para que Argilla configure automáticamente la plantilla y los campos.
 2. **Carga y sincronización vía Notebook:** Abra el cuaderno y ejecute la celda. El código descarga el split deseado con `datasets.load_dataset(...)`, conecta con el servidor y añade masivamente los registros al dataset mediante `dataset.records.log(ds, mapping={})`.
 
-#### 📓 [comandos-varios.ipynb]: Administración de Usuarios y Workspaces
+#### 📓 [notebooks/comandos-varios.ipynb](notebooks/comandos-varios.ipynb): Administración de Usuarios y Workspaces
 Cuaderno para operaciones administrativas y de control de acceso:
 - **Creación de usuarios:** Permite registrar nuevos usuarios con credenciales y roles específicos (`annotator` o `admin`) mediante la clase `rg.User`.
 - **Asignación a Espacios de Trabajo:** Vincula usuarios existentes a un espacio de trabajo determinado (por defecto, `default`) mediante `user.add_to_workspace(...)` para habilitar su acceso a los datasets correspondientes.
@@ -244,17 +244,17 @@ Se incluyen scripts tanto para Unix/Bash como para PowerShell (Windows) y atajos
 | **Instalación estándar** | `./install.sh` | `.\install.ps1` | `make install` | Instalación guiada / inteligente |
 | **Instalación limpia** | `./install.sh --clean -y` | `.\install.ps1 -Clean -Yes` | `make clean-install` | Borra datos previos y reinstala |
 | **Limpiador exclusivo** | `./install.sh --clean-only -y`| `.\install.ps1 -CleanOnly -Yes` | `make clean-only` | Saneamiento total de datos previos |
-| **Iniciar** | `./start.sh` | `.\start.ps1` | `make start` | Inicia contenedores existentes |
-| **Detener** | `./stop.sh` | `.\stop.ps1` | `make stop` | Pausa contenedores (los datos se conservan) |
-| **Reiniciar** | `./restart.sh` | `.\restart.ps1` | `make restart` | Reinicia todos los servicios |
-| **Consultar estado** | `./status.sh` | `.\status.ps1` | `make status` | Muestra estado de contenedores y salud del API |
+| **Iniciar** | `./scripts/start.sh` | `.\scripts\start.ps1` | `make start` | Inicia contenedores existentes |
+| **Detener** | `./scripts/stop.sh` | `.\scripts\stop.ps1` | `make stop` | Pausa contenedores (los datos se conservan) |
+| **Reiniciar** | `./scripts/restart.sh` | `.\scripts\restart.ps1` | `make restart` | Reinicia todos los servicios |
+| **Consultar estado** | `./scripts/status.sh` | `.\scripts\status.ps1` | `make status` | Muestra estado de contenedores y salud del API |
 | **Ver logs** | `docker compose logs -f` | `docker compose logs -f` | `make logs` | Registros en tiempo real de todos los servicios |
 | **Logs del servidor** | `docker compose logs -f argilla` | `docker compose logs -f argilla` | `make logs-server` | Registros del backend Argilla |
 | **Logs de Elasticsearch** | `docker compose logs -f elasticsearch` | `docker compose logs -f elasticsearch` | `make logs-es` | Registros de Elasticsearch |
 | **Probar API REST** | `bash examples/quick_test.sh` | `Invoke-RestMethod ...` | `make test` | Prueba de endpoints |
 | **Probar cliente Python**| `python3 examples/test_client.py` | `python examples\test_client.py` | `make test-python` | Validación con SDK Python |
-| **Desinstalar (conservar datos)** | `./uninstall.sh` | `.\uninstall.ps1` | `make clean` | Elimina contenedores y redes |
-| **Desinstalación total** | `./uninstall.sh --volumes --yes` | `.\uninstall.ps1 -Volumes -Yes` | `make clean-all` | Elimina contenedores y **volúmenes de datos** |
+| **Desinstalar (conservar datos)** | `./scripts/uninstall.sh` | `.\scripts\uninstall.ps1` | `make clean` | Elimina contenedores y redes |
+| **Desinstalación total** | `./scripts/uninstall.sh --volumes --yes` | `.\scripts\uninstall.ps1 -Volumes -Yes` | `make clean-all` | Elimina contenedores y **volúmenes de datos** |
 
 ---
 

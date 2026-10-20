@@ -5,7 +5,8 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-cd "$SCRIPT_DIR"
+ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+cd "$ROOT_DIR"
 
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -18,7 +19,7 @@ ASSUME_YES=0
 
 show_help() {
     cat <<EOF
-Uso: ./uninstall.sh [OPCIONES]
+Uso: ./scripts/uninstall.sh [OPCIONES]
 
 Detiene y elimina los contenedores y redes del despliegue de Argilla.
 
@@ -82,5 +83,5 @@ else
     echo -e "${BLUE}[INFO]${NC} Deteniendo contenedores y eliminando redes (los volúmenes se conservan)..."
     $COMPOSE_CMD down --remove-orphans
     echo -e "${GREEN}[OK]${NC} Despliegue detenido. Los datos permanecen guardados en volúmenes Docker."
-    echo -e "${BLUE}[INFO]${NC} Para eliminar también los datos, ejecute: ./uninstall.sh --volumes"
+    echo -e "${BLUE}[INFO]${NC} Para eliminar también los datos, ejecute: ./scripts/uninstall.sh --volumes"
 fi

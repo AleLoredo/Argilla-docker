@@ -8,24 +8,24 @@ help: ## Muestra este menú de ayuda
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2}'
 
 install: ## Ejecuta la instalación desatendida completa
-	@chmod +x install.sh start.sh stop.sh restart.sh status.sh uninstall.sh scripts/*.sh
+	@chmod +x install.sh scripts/*.sh
 	@./install.sh
 
 start: ## Inicia los contenedores de Argilla
-	@./start.sh
+	@./scripts/start.sh
 
 up: start ## Alias de start
 
 stop: ## Detiene los contenedores sin borrar volúmenes
-	@./stop.sh
+	@./scripts/stop.sh
 
 down: stop ## Alias de stop
 
 restart: ## Reinicia los contenedores de Argilla
-	@./restart.sh
+	@./scripts/restart.sh
 
 status: ## Consulta el estado de los contenedores y la salud del servicio
-	@./status.sh
+	@./scripts/status.sh
 
 logs: ## Sigue los registros en tiempo real de todos los servicios
 	@$(COMPOSE) logs -f
@@ -43,10 +43,10 @@ test-python: ## Ejecuta la prueba de cliente en Python
 	@python3 examples/test_client.py
 
 clean: ## Detiene y elimina contenedores y redes (conserva datos)
-	@./uninstall.sh
+	@./scripts/uninstall.sh
 
 clean-all: ## Elimina contenedores, redes y VOLÚMENES PERSISTENTES (borra datos)
-	@./uninstall.sh --volumes --yes
+	@./scripts/uninstall.sh --volumes --yes
 
 clean-install: ## Limpia datos anteriores y realiza una nueva instalación limpia
 	@./install.sh --clean -y

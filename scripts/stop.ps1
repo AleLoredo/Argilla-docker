@@ -2,7 +2,8 @@
 # Detener servicios de Argilla (PowerShell / Microsoft Windows)
 # ==============================================================================
 $ErrorActionPreference = "Stop"
-Set-Location -Path $PSScriptRoot
+$RootDir = Split-Path -Parent $PSScriptRoot
+Set-Location -Path $RootDir
 
 $composeCmd = "docker compose"
 try {
@@ -20,4 +21,4 @@ if ($composeCmd -eq "docker compose") {
 }
 
 Write-Host "[OK] Contenedores de Argilla detenidos." -ForegroundColor Green
-Write-Host "Para volver a iniciarlos ejecute: .\start.ps1" -ForegroundColor Cyan
+Write-Host "Para volver a iniciarlos ejecute: .\scripts\start.ps1" -ForegroundColor Cyan

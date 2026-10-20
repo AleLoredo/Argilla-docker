@@ -2,7 +2,8 @@
 # Iniciar servicios de Argilla (PowerShell / Microsoft Windows)
 # ==============================================================================
 $ErrorActionPreference = "Stop"
-Set-Location -Path $PSScriptRoot
+$RootDir = Split-Path -Parent $PSScriptRoot
+Set-Location -Path $RootDir
 
 $composeCmd = "docker compose"
 try {
