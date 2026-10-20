@@ -57,7 +57,7 @@ make install
 
 ### En Microsoft Windows (PowerShell Nativo)
 
-El instalador desatendido [install.ps1](file:///Users/alejandro/Documents/LEARN/UGR/UGR-NLP/Argilla-docker/install.ps1) está optimizado para entornos nativos de Microsoft Windows (PowerShell 5.1 y PowerShell 7+):
+El instalador desatendido [install.ps1] está optimizado para entornos nativos de Microsoft Windows (PowerShell 5.1 y PowerShell 7+):
 - **Parámetros no sensibles a mayúsculas/minúsculas:** Compatible con la convención de PowerShell (`-Port`, `-Password` / `-pwd` / `-pass`, `-ApiKey`, `-Workspace`, `-Clean`, etc.).
 - **Gestión automática de Docker Desktop:** Comprueba el estado del demonio Docker y de Docker Compose sin requerir herramientas Unix externas.
 - **Configuración diferencial:** Aplica el perfil de JVM adecuado para Windows/x86_64 evitando parámetros incompatibles de procesadores ARM.
@@ -117,75 +117,67 @@ Una vez completada la instalación, acceda a través de su navegador web:
 
 ---
 
-## 🔧 Gestión de Datasets y Anotaciones
+## 🔧 Gestión de Datasets y Operaciones con Cuadernos Jupyter
 
-El proyecto ofrece herramientas interactivas mediante **Jupyter Notebooks** y scripts automatizados en **Python** para crear datasets, importar datos desde Hugging Face, cargar archivos locales `.jsonl`, monitorear el progreso de anotación y exportar los resultados curados.
+El proyecto utiliza **Jupyter Notebooks** interactivos para todas las tareas de gestión de datasets, carga de datos, exportación de anotaciones y administración de usuarios en Argilla.
 
-### 1. Preparación del Entorno Virtual
+### 1. Entorno Virtual y Dependencias
 
-Para ejecutar los cuadernos interactivos y los scripts, active el entorno virtual e instale las dependencias recomendadas:
+Para mantener el despliegue desacoplado y portable, **el instalador (`install.sh` / `install.ps1`) se enfoca exclusivamente en la orquestación del stack de contenedores Docker**.
+
+La instalación de las librerías cliente (`argilla` y `requests`, definidas en [requirements.txt] se realiza de forma autónoma en la **primera celda de cada cuaderno Jupyter** mediante:
+
+```python
+%pip install -r requirements.txt
+```
+
+De esta manera, las dependencias se instalan directamente en el kernel o entorno virtual (`.venv` u otro) en el que decidas ejecutar los cuadernos, evitando interferencias con el sistema operativo host.
+
+Si prefieres preparar un entorno virtual manualmente desde la terminal:
 
 ```bash
-# Crear el venv local
+# 1. Crear el venv local
 python3 -m venv .venv
 
-# Activar el entorno en macOS / Linux:
+# 2. Activar el entorno
+# En macOS / Linux:
 source .venv/bin/activate
-
-# Activar el entorno en Windows (PowerShell):
+# En Windows (PowerShell):
 .\.venv\Scripts\Activate.ps1
 
-# Instalar dependencias necesarias (Argilla, Datasets de Hugging Face y Jupyter)
-pip install --upgrade pip
-pip install argilla datasets jupyter
+# 3. Instalar dependencias
+pip install -r requirements.txt
+pip install jupyter datasets
 ```
 
 ---
 
-### 2. Cuadernos Interactivos (Jupyter Notebooks)
+### 2. Cuadernos Interactivos Disponibles
 
-#### 📓 [cargar-datos-hf.ipynb](file:///Users/alejandro/Documents/LEARN/UGR/UGR-NLP/Argilla-docker/cargar-datos-hf.ipynb): Carga de Datasets Públicos de Hugging Face
-Permite volcar registros desde cualquier dataset público alojado en [Hugging Face](https://huggingface.co/datasets) (por ejemplo, `FineEnvs/openai-math`) hacia su contenedor correspondiente en Argilla.
+#### 📓 [cargar-datos-jsonl.ipynb]: Creación, Carga y Exportación desde JSONL
+Cuaderno integral preparado para gestionar el ciclo de anotación local a partir del dataset multirareo (`train.jsonl`):
+- **Celda 1:** Instalación de dependencias locales (`%pip install -r requirements.txt`).
+- **Celda 2 (Creación del Dataset y Carga):**
+  - Lee y valida el archivo `train-dataset1/train.jsonl`.
+  - Descubre dinámicamente las etiquetas correspondientes a las tareas de tipo `choice`.
+  - Construye el esquema del dataset en Argilla (`telco_multitask_evaluation_v3`) definiendo directrices, campos de texto (`text`, `task_instructions`, `criteria_guide`) y preguntas (`review_status`, `department`, `binary_confirmation`, `frustration_score`).
+  - Envía los registros en lotes de 100 (*batches*) con sugerencias iniciales precargadas para acelerar el proceso de etiquetado.
+- **Celda 3 (Exportación de Anotaciones Curadas):**
+  - Extrae todos los registros que cuentan con respuestas enviadas por los anotadores (`with_responses=True`).
+  - Genera y guarda el dataset resultante en formato estructurado dentro del archivo local `train-dataset1/annotated.jsonl`.
 
-**Flujo de trabajo requerido:**
-1. **Creación previa del contenedor en la UI:** Abra la interfaz web de Argilla (`http://localhost:6900`), inicie sesión y seleccione la opción **"Import from Hugging Face"**. Indique el identificador del repositorio de Hugging Face para que Argilla configure automáticamente el esquema de preguntas y campos del dataset.
-2. **Carga y sincronización vía Notebook:** Abra `cargar-datos-hf.ipynb`. El cuaderno descarga el split deseado mediante la librería `datasets` (`load_dataset(...)`), conecta con la API de Argilla y envía los registros masivamente al dataset previamente creado usando `dataset.records.log(ds, mapping={})`.
+#### 📓 [cargar-datos-hf.ipynb]: Carga de Datasets Públicos de Hugging Face
+Permite volcar registros desde cualquier dataset público alojado en [Hugging Face](https://huggingface.co/datasets) (por ejemplo, `FineEnvs/openai-math` u otros conjuntos de datos) hacia su contenedor correspondiente en Argilla.
 
-#### 📓 [cargar-datos-jsonl.ipynb](file:///Users/alejandro/Documents/LEARN/UGR/UGR-NLP/Argilla-docker/cargar-datos-jsonl.ipynb): Creación, Carga y Exportación desde JSONL
-Cuaderno interactivo todo-en-uno estructurado en celdas preparadas para gestionar el ciclo completo de anotación local:
-1. **Creación del Dataset y Carga de Registros:**
-   - Lee el archivo `train-dataset1/train.jsonl`.
-   - Descubre dinámicamente el catálogo de etiquetas para tareas de tipo `choice`.
-   - Configura el dataset en Argilla (`telco_multitask_evaluation`) definiendo directrices, campos (`text`, `task_instructions`, `criteria_guide`) y preguntas de anotación (`review_status`, `department`, `binary_confirmation`, `frustration_score`).
-   - Envía los registros en lotes (*batches* de 100) incluyendo sugerencias pre-cargadas basadas en `target` para agilizar la anotación.
-2. **Exportación de Datos Curados a JSONL Local:**
-   - Consulta los registros del dataset incluyendo las respuestas guardadas por los anotadores (`with_responses=True`).
-   - Exporta los datos consolidados directamente a un archivo local `.jsonl` (`train-dataset1/annotated.jsonl`), listo para tareas de entrenamiento o evaluación de modelos.
+**Flujo de trabajo:**
+1. **Creación previa del contenedor en la UI:** Abra la interfaz web de Argilla (`http://localhost:6900`), inicie sesión y seleccione la opción **"Import from Hugging Face"**. Indique el identificador del repositorio para que Argilla configure automáticamente la plantilla y los campos.
+2. **Carga y sincronización vía Notebook:** Abra el cuaderno y ejecute la celda. El código descarga el split deseado con `datasets.load_dataset(...)`, conecta con el servidor y añade masivamente los registros al dataset mediante `dataset.records.log(ds, mapping={})`.
 
----
+#### 📓 [comandos-varios.ipynb]: Administración de Usuarios y Workspaces
+Cuaderno para operaciones administrativas y de control de acceso:
+- **Creación de usuarios:** Permite registrar nuevos usuarios con credenciales y roles específicos (`annotator` o `admin`) mediante la clase `rg.User`.
+- **Asignación a Espacios de Trabajo:** Vincula usuarios existentes a un espacio de trabajo determinado (por defecto, `default`) mediante `user.add_to_workspace(...)` para habilitar su acceso a los datasets correspondientes.
 
-### 3. Scripts Python Disponibles
-
-Para ejecución directa desde terminal o flujos de trabajo automatizados:
-
-- **`upload_to_argilla.py` / `cargar-datos-jsonl.py` (Carga inicial):** Script de consola que crea el dataset y sube los registros de `train-dataset1/train.jsonl` con preguntas y sugerencias predefinidas.
-  ```bash
-  python upload_to_argilla.py
-  ```
-- **`cargar-datos-hf-terminal-hf.py` (Carga desde Hugging Face):** Script en línea de comandos para sincronizar registros desde Hugging Face hacia un dataset importado previamente en Argilla.
-  ```bash
-  python cargar-datos-hf-terminal-hf.py
-  ```
-- **`comprobar.py` (Verificación de estado de anotación):** Consulta la base de datos de Argilla e imprime un resumen en consola sin necesidad de abrir el navegador:
-  - Conteo de registros anotados (`responses`) vs. pendientes.
-  - Identificación de los anotadores activos (`user_id`).
-  ```bash
-  python comprobar.py
-  ```
-- **`exportarr-anotados.py` (Exportación estructurada):** Extrae las respuestas guardadas del dataset, procesa cada tipo de tarea (`choice`, `noul`, `score`), aplica sugerencias como respaldo (*fallback*) y genera el archivo `train-dataset1/train_annotated.jsonl`.
-  ```bash
-  python exportarr-anotados.py
-  ```
 
 
 ---
