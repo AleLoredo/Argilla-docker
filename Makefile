@@ -47,3 +47,12 @@ clean: ## Detiene y elimina contenedores y redes (conserva datos)
 
 clean-all: ## Elimina contenedores, redes y VOLÚMENES PERSISTENTES (borra datos)
 	@./uninstall.sh --volumes --yes
+
+clean-install: ## Limpia datos anteriores y realiza una nueva instalación limpia
+	@./install.sh --clean -y
+
+clean-only: ## Ejecuta el instalador exclusivamente como limpiador total
+	@./install.sh --clean-only -y
+
+reset: clean-install ## Alias de clean-install (reinstalación desde cero)
+

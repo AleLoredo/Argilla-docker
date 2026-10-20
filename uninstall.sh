@@ -49,6 +49,8 @@ if docker compose version >/dev/null 2>&1; then
     COMPOSE_CMD="docker compose"
 elif command -v docker-compose >/dev/null 2>&1; then
     COMPOSE_CMD="docker-compose"
+elif command -v docker-compose.exe >/dev/null 2>&1; then
+    COMPOSE_CMD="docker-compose.exe"
 else
     echo "Error: Docker Compose no está instalado." >&2
     exit 1
@@ -65,7 +67,17 @@ if [ "$REMOVE_VOLUMES" -eq 1 ]; then
     fi
     echo -e "${YELLOW}[INFO]${NC} Deteniendo contenedores y eliminando redes y volúmenes..."
     $COMPOSE_CMD down -v --remove-orphans
-    echo -e "${GREEN}[OK]${NC} Contenedores y volúmenes eliminados."
+    
+    # Limpiar cualquier volumen residual de Argilla
+    if command -v docker >/dev/null 2>&1; then
+        RESIDUAL_VOLS=$(docker volume ls -q --filter "name=argilla" 2>/dev/null || echo "")
+        if [ -n "$RESIDUAL_VOLS" ]; then
+            for v in $RESIDUAL_VOLS; do
+                docker volume rm -f "$v" >/dev/null 2>&1 || true
+            done
+        fi
+    fi
+    echo -e "${GREEN}[OK]${NC} Contenedores y volúmenes eliminados satisfactoriamente."
 else
     echo -e "${BLUE}[INFO]${NC} Deteniendo contenedores y eliminando redes (los volúmenes se conservan)..."
     $COMPOSE_CMD down --remove-orphans

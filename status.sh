@@ -19,6 +19,8 @@ if docker compose version >/dev/null 2>&1; then
     COMPOSE_CMD="docker compose"
 elif command -v docker-compose >/dev/null 2>&1; then
     COMPOSE_CMD="docker-compose"
+elif command -v docker-compose.exe >/dev/null 2>&1; then
+    COMPOSE_CMD="docker-compose.exe"
 else
     echo "Error: Docker Compose no está instalado." >&2
     exit 1

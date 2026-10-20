@@ -76,8 +76,8 @@ services:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.17.0
     restart: unless-stopped
     environment:
-      - ES_JAVA_OPTS=-Xms${ES_HEAP_SIZE:-512m} -Xmx${ES_HEAP_SIZE:-512m} -XX:UseSVE=0
-      - CLI_JAVA_OPTS=-XX:UseSVE=0
+      - ES_JAVA_OPTS=-Xms${ES_HEAP_SIZE:-512m} -Xmx${ES_HEAP_SIZE:-512m} ${ES_JAVA_OPTS_EXTRA:-}
+      - CLI_JAVA_OPTS=${ES_JAVA_OPTS_EXTRA:-}
       - node.name=elasticsearch
       - cluster.name=es-argilla-local
       - discovery.type=single-node

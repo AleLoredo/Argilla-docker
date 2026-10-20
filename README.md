@@ -41,27 +41,61 @@ graph TD
 
 ---
 
-##  Instalación Desatendida en 1 Comando
+## 🚀 Instalación y Despliegue Multiplataforma
 
-Para instalar y arrancar la pila de Argilla de forma 100% desatendida con la configuración estándar:
+El instalador detecta automáticamente si el sistema es **macOS** (Apple Silicon / Intel), **Microsoft Windows** (PowerShell, Git Bash o WSL2) o **GNU/Linux**, aplicando las configuraciones diferenciales necesarias (por ejemplo, deshabilitando banderas exclusivas de procesadores ARM en máquinas x86/Windows para evitar fallos de Java).
+
+### En macOS y Linux (Bash / Make)
 
 ```bash
+# Instalación estándar interactiva / desatendida
 ./install.sh
-```
 
-O si prefiere utilizar `make`:
-
-```bash
+# O mediante make:
 make install
 ```
 
-### ¿Qué realiza el instalador desatendido?
-1. **Comprobación de requisitos:** Valida la disponibilidad de Docker, Docker Compose, el estado del demonio y la disponibilidad del puerto.
-2. **Ajuste automático en Linux:** Comprueba `vm.max_map_count` (necesario para Elasticsearch) y lo configura si se tienen permisos.
-3. **Generación de entorno:** Crea automáticamente el archivo `.env` a partir de `.env.example` si no existe.
-4. **Descarga y arranque:** Descarga las imágenes oficiales e inicia los contenedores en segundo plano (`docker compose up -d`).
-5. **Espera activa y validación de salud:** Sondea el endpoint `/api/v1/version` y `/api/v1/me` hasta verificar que tanto el servidor web como la base de datos y el motor de búsqueda estén listos para operar.
-6. **Muestra resumen de acceso:** Imprime las credenciales, URLs y comandos útiles.
+### En Microsoft Windows (PowerShell Nativo)
+
+Abra PowerShell en la carpeta del proyecto y ejecute:
+
+```powershell
+.\install.ps1
+```
+
+> [!TIP]
+> Si la política de ejecución de PowerShell bloquea los scripts locales, ejecute:  
+> `powershell -ExecutionPolicy Bypass -File .\install.ps1`
+
+También puede utilizar **Git Bash** o **WSL2** en Windows ejecutando directamente `./install.sh`.
+
+---
+
+## 🧹 Rol Dual: Instalador y Limpiador de Datos Anteriores
+
+Una causa habitual de confusión al trabajar con Argilla es que al eliminar o detener el contenedor, **las actividades y anotaciones previas persisten en los volúmenes de Docker**.
+
+El nuevo proceso de instalación detecta si existen actividades previas y ofrece gestionarlas:
+
+1. **Detección inteligente de datos:** Detecta si existen volúmenes persistentes de bases de datos (`postgresdata`, `elasticdata`, `redisdata`, `argilladata`).
+2. **Opción de limpieza total:** Pregunta al usuario si desea eliminar toda la información anterior para comenzar desde cero.
+3. **Rol como "Limpiador" independiente:** Tras la limpieza, pregunta si desea proceder con una nueva instalación o si solo deseaba limpiar el sistema (`[S/n]`).
+4. **Descarga selectiva:** Comprueba si las imágenes ya existen en la caché local de Docker antes de descargarlas, evitando transferencias innecesarias de red.
+
+### Comandos de Limpieza Rápida:
+
+```bash
+# En macOS / Linux / Git Bash:
+./install.sh --clean -y         # Reinstalación 100% limpia y desatendida (elimina datos previos)
+./install.sh --clean-only -y    # Usar como LIMPIADOR exclusivo (borra datos y finaliza sin instalar)
+make clean-install              # Vía Makefile: reinstalación desde cero
+make clean-only                 # Vía Makefile: limpiador exclusivo
+
+# En Microsoft Windows (PowerShell):
+.\install.ps1 -Clean -Yes       # Reinstalación 100% limpia
+.\install.ps1 -CleanOnly -Yes   # Limpiador exclusivo (borra volúmenes y finaliza)
+```
+
 
 ---
 
@@ -132,22 +166,31 @@ python exportarr-anotados.py
 
 Puede personalizar los parámetros pasando argumentos al instalador o modificando el archivo `.env`:
 
-### Parámetros de línea de comandos en `install.sh`
+### Parámetros de línea de comandos en `install.sh` y `install.ps1`
 
 ```bash
+# macOS / Linux / Git Bash:
 ./install.sh -p 7000 -P "MiClaveSuperSegura" -k "mi.clave.api.personalizada" -w "mi-workspace"
+
+# Microsoft Windows (PowerShell):
+.\install.ps1 -Port 7000 -Password "MiClaveSuperSegura" -ApiKey "mi.clave.api.personalizada"
 ```
 
-| Opción | Descripción | Valor por defecto |
-| :--- | :--- | :--- |
-| `-p`, `--port` | Puerto expuesto en el host | `6900` |
-| `-u`, `--user` | Nombre del usuario administrador | `argilla` |
-| `-P`, `--password` | Contraseña del usuario administrador | `12345678` |
-| `-k`, `--api-key` | API Key para autenticación en clientes | `argilla.apikey` |
-| `-w`, `--workspace` | Espacio de trabajo inicial | `default` |
-| `-t`, `--timeout` | Tiempo máximo de espera en segundos para arranque | `180` |
-| `--no-wait` | No esperar a que los servicios estén listos | Desactivado |
-| `-h`, `--help` | Muestra la ayuda en pantalla | — |
+| Opción Bash | Opción PowerShell | Descripción | Valor por defecto |
+| :--- | :--- | :--- | :--- |
+| `-p`, `--port` | `-Port` | Puerto expuesto en el host | `6900` |
+| `-u`, `--user` | `-User` | Nombre del usuario administrador | `argilla` |
+| `-P`, `--password` | `-Password` | Contraseña del usuario administrador | `12345678` |
+| `-k`, `--api-key` | `-ApiKey` | API Key para autenticación en clientes | `argilla.apikey` |
+| `-w`, `--workspace` | `-Workspace` | Espacio de trabajo inicial | `default` |
+| `-t`, `--timeout` | `-Timeout` | Tiempo máximo de espera en segundos para arranque | `180` |
+| `--clean` | `-Clean` | Borra datos/volúmenes previos y reinstala | Desactivado |
+| `--clean-only` | `-CleanOnly` | Modo limpiador: solo borra datos previos y finaliza | Desactivado |
+| `--keep-data` | `-KeepData` | Conserva datos anteriores sin consultar al usuario | Desactivado |
+| `--pull` | `-Pull` | Fuerza descarga de imágenes aunque existan en local | Desactivado |
+| `-y`, `--yes` | `-Yes` | Responde automáticamente 'Sí' a las confirmaciones | Desactivado |
+| `--no-wait` | `-NoWait` | No esperar a que los servicios estén listos | Desactivado |
+| `-h`, `--help` | `-Help` | Muestra la ayuda en pantalla | — |
 
 ### Variables de Entorno (`.env`)
 
@@ -166,28 +209,32 @@ POSTGRES_USER=postgres
 POSTGRES_PASSWORD=postgres
 POSTGRES_DB=argilla
 ES_HEAP_SIZE=512m
+# Configurado automáticamente por el instalador (-XX:UseSVE=0 para Apple Silicon)
+ES_JAVA_OPTS_EXTRA=
 ```
 
 ---
 
 ## 🛠️ Comandos de Gestión y Mantenimiento
 
-Se incluyen scripts y atajos de `Makefile` para facilitar la gestión:
+Se incluyen scripts tanto para Unix/Bash como para PowerShell (Windows) y atajos de `Makefile`:
 
-| Acción | Vía Script | Vía Make | Descripción |
-| :--- | :--- | :--- | :--- |
-| **Instalar** | `./install.sh` | `make install` | Instalación y arranque desatendido |
-| **Iniciar** | `./start.sh` | `make start` | Inicia contenedores existentes |
-| **Detener** | `./stop.sh` | `make stop` | Pausa contenedores (los datos se conservan) |
-| **Reiniciar** | `./restart.sh` | `make restart` | Reinicia todos los servicios |
-| **Consultar estado** | `./status.sh` | `make status` | Muestra estado de contenedores y salud del API |
-| **Ver logs** | `docker compose logs -f` | `make logs` | Registros en tiempo real de todos los servicios |
-| **Logs del servidor** | `docker compose logs -f argilla` | `make logs-server` | Registros del backend Argilla |
-| **Logs de Elasticsearch** | `docker compose logs -f elasticsearch` | `make logs-es` | Registros de Elasticsearch |
-| **Probar API REST** | `bash examples/quick_test.sh` | `make test` | Prueba de endpoints con `curl` |
-| **Probar cliente Python**| `python3 examples/test_client.py` | `make test-python` | Validación con SDK/peticiones Python |
-| **Desinstalar** | `./uninstall.sh` | `make clean` | Elimina contenedores y redes |
-| **Desinstalación total** | `./uninstall.sh --volumes --yes` | `make clean-all` | Elimina contenedores y **volúmenes de datos** |
+| Acción | Bash (macOS/Linux) | PowerShell (Windows) | Vía Make | Descripción |
+| :--- | :--- | :--- | :--- | :--- |
+| **Instalación estándar** | `./install.sh` | `.\install.ps1` | `make install` | Instalación guiada / inteligente |
+| **Instalación limpia** | `./install.sh --clean -y` | `.\install.ps1 -Clean -Yes` | `make clean-install` | Borra datos previos y reinstala |
+| **Limpiador exclusivo** | `./install.sh --clean-only -y`| `.\install.ps1 -CleanOnly -Yes` | `make clean-only` | Saneamiento total de datos previos |
+| **Iniciar** | `./start.sh` | `.\start.ps1` | `make start` | Inicia contenedores existentes |
+| **Detener** | `./stop.sh` | `.\stop.ps1` | `make stop` | Pausa contenedores (los datos se conservan) |
+| **Reiniciar** | `./restart.sh` | `.\restart.ps1` | `make restart` | Reinicia todos los servicios |
+| **Consultar estado** | `./status.sh` | `.\status.ps1` | `make status` | Muestra estado de contenedores y salud del API |
+| **Ver logs** | `docker compose logs -f` | `docker compose logs -f` | `make logs` | Registros en tiempo real de todos los servicios |
+| **Logs del servidor** | `docker compose logs -f argilla` | `docker compose logs -f argilla` | `make logs-server` | Registros del backend Argilla |
+| **Logs de Elasticsearch** | `docker compose logs -f elasticsearch` | `docker compose logs -f elasticsearch` | `make logs-es` | Registros de Elasticsearch |
+| **Probar API REST** | `bash examples/quick_test.sh` | `Invoke-RestMethod ...` | `make test` | Prueba de endpoints |
+| **Probar cliente Python**| `python3 examples/test_client.py` | `python examples\test_client.py` | `make test-python` | Validación con SDK Python |
+| **Desinstalar (conservar datos)** | `./uninstall.sh` | `.\uninstall.ps1` | `make clean` | Elimina contenedores y redes |
+| **Desinstalación total** | `./uninstall.sh --volumes --yes` | `.\uninstall.ps1 -Volumes -Yes` | `make clean-all` | Elimina contenedores y **volúmenes de datos** |
 
 ---
 
